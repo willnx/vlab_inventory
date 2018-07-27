@@ -14,6 +14,12 @@ services:
       willnx/vlab-inventory-worker
     volumes:
       - ./vlab_inventory_api:/usr/lib/python3.6/site-packages/vlab_inventory_api
+      - /home/willhn/code/vlab/vlab_inf_common/vlab_inf_common:/usr/lib/python3.6/site-packages/vlab_inf_common
+    environment:
+      - INF_VCENTER_SERVER=changeME
+      - INF_VCENTER_USER=changeME
+      - INF_VCENTER_PASSWORD=changeME
+      - INF_VCENTER_TOP_LVL_DIR=/vlab
 
   inventory-broker:
     image:

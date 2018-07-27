@@ -2,6 +2,8 @@
 """
 This module defines the API for tracking your vLab inventory
 """
+import ujson
+from flask import current_app
 from flask_classy import request
 from vlab_inf_common.views import TaskView
 from vlab_inf_common.vmware import vCenter, vim
@@ -20,23 +22,16 @@ class InventoryView(TaskView):
     GET_SCHEMA = {"$schema": "http://json-schema.org/draft-04/schema#",
                   "description": "Return all the virtual machines a user owns"
                  }
-    DELETE_ARGS_SCHEMA = {"$schema": "http://json-schema.org/draft-04/schema#",
-    	                  "type": "object",
-                          "description": "Destroy the user's inventory record"
-                          "properties": {
-                             "everything": {
-                                "type": "boolean",
-                                "description": "Delete all virtual machines, along with the user's record"
-                             }
-                          }
-                         }
+    DELETE_SCHEMA = {"$schema": "http://json-schema.org/draft-04/schema#",
+                     "description": "Destroy the user's inventory record"
+                    }
     POST_SCHEMA = {"$schema": "http://json-schema.org/draft-04/schema#",
                    "description": "Create a new record so a user can track their inventory of virtual machines"
-                 }
+                  }
 
-    @describe(get=GET_SCHEMA, delete_args=DELETE_ARGS_SCHEMA, post=POST_SCHEMA)
+    @describe(get=GET_SCHEMA, delete=DELETE_SCHEMA, post=POST_SCHEMA)
     @requires(verify=False)
-    def get(self):
+    def get(self, *args, **kwargs):
         """Get all the virtual machines within a folder"""
         username = kwargs['token']['username']
         resp = {'user' : username}
@@ -49,7 +44,7 @@ class InventoryView(TaskView):
         """Create a user's folder"""
         username = kwargs['token']['username']
         resp = {"user" : username}
-        task = current_app.celerey_app.send_task('inventory.create', [username])
+        task = current_app.celery_app.send_task('inventory.create', [username])
         resp['content'] = {'task-id': task.id}
         return ujson.dumps(resp), 200
 
@@ -58,7 +53,6 @@ class InventoryView(TaskView):
         """Delete a user's folder"""
         username = kwargs['token']['username']
         resp = {'user' : username}
-        delete_everything = request.args.get('delete-everything', False)
-        task = current_app.celery_app.send_task('inventory.delete', [username, delete_everything])
+        task = current_app.celery_app.send_task('inventory.delete', [username])
         resp['content'] = {'task-id': task.id}
         return ujson.dumps(resp), 200

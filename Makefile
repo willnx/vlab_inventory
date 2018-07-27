@@ -21,3 +21,6 @@ test: uninstall install
 images: build
 	sudo docker build -t willnx/vlab-inventory-api .
 	sudo docker build -f WorkerDockerfile -t willnx/vlab-inventory-worker .
+
+up:
+	docker-compose -p vlabInventory up --abort-on-container-exit

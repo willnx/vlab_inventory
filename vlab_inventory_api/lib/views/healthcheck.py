@@ -23,19 +23,7 @@ class HealthView(FlaskView):
         """End point for health checks"""
         resp = {}
         status = 200
-        stime = time()
-        try:
-            with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
-                         password=const.INF_VCENTER_PASSWORD, verify=const.INF_VCENTER_VERIFY_CERT):
-                pass
-        except Exception as doh:
-            resp['error'] = '{}'.format(doh)
-            status = 500
-        else:
-            resp['error'] = None
-        resp['latency'] = time() - stime
-
-        resp['version'] = pkg_resources.get_distribution('vlab-folder-api').version
+        resp['version'] = pkg_resources.get_distribution('vlab-inventory-api').version
         response = Response(ujson.dumps(resp))
         response.status_code = status
         response.headers['Content-Type'] = 'application/json'

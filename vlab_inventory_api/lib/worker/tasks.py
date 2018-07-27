@@ -26,13 +26,15 @@ Example:
 
 """
 from celery import Celery
-from vlab_api_common import get_logger
+from celery.utils.log import get_task_logger
 from vlab_inf_common.vmware import vCenter
 
 from vlab_inventory_api.lib import const
+from vlab_inventory_api.lib.worker import vmware
 
 app = Celery('inventory', backend='rpc://', broker=const.VLAB_MESSAGE_BROKER)
-logger = get_logger(__name__, loglevel=const.VLAB_INVENTORY_LOG_LEVEL)
+logger = get_task_logger(__name__)
+logger.setLevel(const.VLAB_INVENTORY_LOG_LEVEL.upper())
 
 
 @app.task(name='inventory.show')
@@ -45,22 +47,20 @@ def show(username):
     :type username: String
     """
     resp = {'content' : {}, 'error' : None, 'params' : {}}
+    logger.info('Task Starting')
     try:
-        vcenter= vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
-                         password=const.INF_VCENTER_PASSWORD, verify=const.INF_VCENTER_VERIFY_CERT)
-        location = '{}/'.format(const.INF_VCENTER_TOP_LVL_DIR, username)
-        folder = vcenter.get_vm_folder(location)
+        info = vmware.show_inventory(username)
     except FileNotFoundError:
         status = 404
         resp['error'] = 'User {} has no folder; try POSTing to create one.'.format(username)
     else:
-        # loop over items in folder, and build up response
-        pass
-    finally:
-        vcenter.close()
+        resp['content'] = info
+    logger.info('Task Complete')
+    return resp
+
 
 @app.task(name='inventory.delete')
-def delete(username, everything):
+def delete(username):
     """Destroy a user's inventory
 
     :Returns: Dictionary
@@ -71,28 +71,10 @@ def delete(username, everything):
     :param everything: Optionally destroy all the VMs associated with the user
     :type everything: Boolean
     """
-    resp = {'content' : {}, 'error' : None, 'params' : {'everything': everything}}
-    try:
-        vcenter= vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
-                         password=const.INF_VCENTER_PASSWORD, verify=const.INF_VCENTER_VERIFY_CERT)
-        location = '{}/'.format(const.INF_VCENTER_TOP_LVL_DIR, username)
-        folder = vcenter.get_vm_folder(location)
-        nuke_folder(folder, delete_everything=delete_everything)
-    except FolderNotEmptyError:
-        resp['error'] = 'To delete a non-empty folder, use param "delete-everything=true"'
-    except vim.fault.InvalidState as doh:
-        # Some VM isn't powered off...
-        resp['error'] = '{}'.format(doh)
-    except FileNotFoundError:
-        resp['error'] = 'User {} has no folder'.format(username)
-    except RuntimeError as doh:
-        logger.exception(doh)
-        resp['error'] = doh
-    except Exception as doh:
-        logger.excception(doh)
-        resp['error'] = '{}'.format(doh)
-    finally:
-        vcenter.close()
+    resp = {'content' : {}, 'error' : None, 'params' : {}}
+    logger.info('Task Starting')
+    resp['error'] = vmware.delete_inventory(username)
+    logger.info('Task Complete')
     return resp
 
 
@@ -106,39 +88,7 @@ def create(username):
     :type username: String
     """
     resp = {'content' : {}, 'error' : None, 'params' : {}}
-    try:
-        with vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,
-                     password=const.INF_VCENTER_PASSWORD, verify=const.INF_VCENTER_VERIFY_CERT) as vcenter:
-            location = '{}/'.format(const.INF_VCENTER_TOP_LVL_DIR, username)
-            vcenter.create_vm_folder(location)
-    except Exception as doh:
-        logger.exception(doh)
-        resp['error'] = '{}'.format(doh)
-
-
-def nuke_folder(folder, delete_everything=False, timeout=300):
-    """Delete a user's folder
-
-    :Returns: None
-
-    :param folder: **Required** The user's folder to delete
-    :type folder: vim.Folder
-
-    :param delete_everything: Optionally delete "all the things" in a single call
-    :type delete_everything: Boolean
-
-    :param timeout: How long to wait for the operation to complete
-    :type timeout: Integer
-    """
-    if delete_everything:
-        task = folder.UnregisterAndDestroy()
-    else:
-        task = folder.Destroy()
-    for _ in range(timeout):
-        if task.info.state == 'success':
-            break
-        else:
-            sleep(1)
-    else:
-        error = 'Task failed to complete within {} seconds'.format(timeout)
-        raise RuntimeError(error)
+    logger.info('Task Starting')
+    vmware.create_inventory(username)
+    logger.info('Task Complete')
+    return resp
