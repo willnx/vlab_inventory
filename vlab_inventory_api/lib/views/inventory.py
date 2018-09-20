@@ -30,7 +30,7 @@ class InventoryView(TaskView):
                   }
 
     @describe(get=GET_SCHEMA, delete=DELETE_SCHEMA, post=POST_SCHEMA)
-    @requires(verify=False)
+    @requires(verify=False, version=(1,2))
     def get(self, *args, **kwargs):
         """Get all the virtual machines within a folder"""
         username = kwargs['token']['username']
@@ -39,7 +39,7 @@ class InventoryView(TaskView):
         resp['content'] = {'task-id': task.id}
         return ujson.dumps(resp), 200
 
-    @requires(verify=False)
+    @requires(verify=False, version=(1,2))
     def post(self, *args, **kwargs):
         """Create a user's folder"""
         username = kwargs['token']['username']
@@ -48,7 +48,7 @@ class InventoryView(TaskView):
         resp['content'] = {'task-id': task.id}
         return ujson.dumps(resp), 200
 
-    @requires(verify=False)
+    @requires(verify=False, version=(1,2))
     def delete(self, *args, **kwargs):
         """Delete a user's folder"""
         username = kwargs['token']['username']
