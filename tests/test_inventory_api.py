@@ -41,6 +41,15 @@ class TestInventoryView(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_get_task_link(self):
+        """GET on /api/1/inf/inventory sets the Link header"""
+        resp = self.app.get('/api/1/inf/inventory', headers={'X-Auth': self.token})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/inventory/task/asdf-asdf-asdf>; rel=status'
+
+        self.assertEqual(task_id, expected)
+
     def test_post_task_id(self):
         """POST on /api/1/inf/inventory turns a task-id when given valid input"""
         resp = self.app.post('/api/1/inf/inventory', headers={'X-Auth': self.token})
@@ -50,6 +59,15 @@ class TestInventoryView(unittest.TestCase):
 
         self.assertEqual(result, expected)
 
+    def test_post_task_link(self):
+        """POST on /api/1/inf/inventory sets the Link header"""
+        resp = self.app.post('/api/1/inf/inventory', headers={'X-Auth': self.token})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/inventory/task/asdf-asdf-asdf>; rel=status'
+
+        self.assertEqual(task_id, expected)
+
     def test_delete_task_id(self):
         """DELETE on /api/1/inf/inventory turns a task-id when given valid input"""
         resp = self.app.delete('/api/1/inf/inventory', headers={'X-Auth': self.token})
@@ -58,6 +76,15 @@ class TestInventoryView(unittest.TestCase):
         expected = 'asdf-asdf-asdf'
 
         self.assertEqual(result, expected)
+
+    def test_delete_task_link(self):
+        """DELETE on /api/1/inf/inventory sets the Link header"""
+        resp = self.app.delete('/api/1/inf/inventory', headers={'X-Auth': self.token})
+
+        task_id = resp.headers['Link']
+        expected = '<https://localhost/api/1/inf/inventory/task/asdf-asdf-asdf>; rel=status'
+
+        self.assertEqual(task_id, expected)
 
 
 if __name__ == '__main__':

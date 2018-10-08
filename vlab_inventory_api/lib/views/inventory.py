@@ -4,7 +4,7 @@ This module defines the API for tracking your vLab inventory
 """
 import ujson
 from flask import current_app
-from flask_classy import request
+from flask_classy import request, Response
 from vlab_inf_common.views import TaskView
 from vlab_inf_common.vmware import vCenter, vim
 from vlab_api_common import describe, get_logger, requires
@@ -34,25 +34,34 @@ class InventoryView(TaskView):
     def get(self, *args, **kwargs):
         """Get all the virtual machines within a folder"""
         username = kwargs['token']['username']
-        resp = {'user' : username}
+        resp_data = {'user' : username}
         task = current_app.celery_app.send_task('inventory.show', [username])
-        resp['content'] = {'task-id': task.id}
-        return ujson.dumps(resp), 200
+        resp_data['content'] = {'task-id': task.id}
+        resp = Response(ujson.dumps(resp_data))
+        resp.status_code = 202
+        resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
+        return resp
 
     @requires(verify=False, version=(1,2))
     def post(self, *args, **kwargs):
         """Create a user's folder"""
         username = kwargs['token']['username']
-        resp = {"user" : username}
+        resp_data = {"user" : username}
         task = current_app.celery_app.send_task('inventory.create', [username])
-        resp['content'] = {'task-id': task.id}
-        return ujson.dumps(resp), 200
+        resp_data['content'] = {'task-id': task.id}
+        resp = Response(ujson.dumps(resp_data))
+        resp.status_code = 202
+        resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
+        return resp
 
     @requires(verify=False, version=(1,2))
     def delete(self, *args, **kwargs):
         """Delete a user's folder"""
         username = kwargs['token']['username']
-        resp = {'user' : username}
+        resp_data = {'user' : username}
         task = current_app.celery_app.send_task('inventory.delete', [username])
-        resp['content'] = {'task-id': task.id}
-        return ujson.dumps(resp), 200
+        resp_data['content'] = {'task-id': task.id}
+        resp = Response(ujson.dumps(resp_data))
+        resp.status_code = 202
+        resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
+        return resp
