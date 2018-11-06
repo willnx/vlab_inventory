@@ -19,7 +19,7 @@ test: uninstall install
 	cd tests && nosetests -v --with-coverage --cover-package=vlab_inventory_api
 
 images: build
-	docker build -t willnx/vlab-inventory-api .
+	docker build -f ApiDockerfile -t willnx/vlab-inventory-api .
 	docker build -f WorkerDockerfile -t willnx/vlab-inventory-worker .
 
 up:
