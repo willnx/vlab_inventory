@@ -18,6 +18,7 @@ DEFINED = OrderedDict([
             ('INF_VCENTER_TOP_LVL_DIR', environ.get('INF_VCENTER_TOP_LVL_DIR', 'vlab')),
             ('VLAB_MESSAGE_BROKER', environ.get('VLAB_MESSAGE_BROKER', 'inventory-broker')),
             ('VLAB_URL', environ.get('VLAB_URL', 'https://localhost')),
+            ('VLAB_VERIFY_TOKEN', environ.get('VLAB_VERIFY_TOKEN', False)),
           ])
 
 Constants = namedtuple('Constants', list(DEFINED.keys()))
