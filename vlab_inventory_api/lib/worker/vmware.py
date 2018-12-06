@@ -3,14 +3,10 @@
 import time
 import random
 import os.path
-from celery.utils.log import get_task_logger
+
 from vlab_inf_common.vmware import vCenter, vim, virtual_machine, consume_task
 
 from vlab_inventory_api.lib import const
-
-
-logger = get_task_logger(__name__)
-logger.setLevel(const.VLAB_INVENTORY_LOG_LEVEL.upper())
 
 
 def show_inventory(username):
@@ -45,7 +41,7 @@ def create_inventory(username):
         vcenter.create_vm_folder(location)
 
 
-def delete_inventory(username):
+def delete_inventory(username, logger):
     """Destroy a user's inventory
 
     :Returns: Dictionary
@@ -55,6 +51,9 @@ def delete_inventory(username):
 
     :param everything: Optionally destroy all the VMs associated with the user
     :type everything: Boolean
+
+    :param logger: An object for logging messages
+    :type logger: logging.LoggerAdapter
     """
     error = None
     vcenter = vCenter(host=const.INF_VCENTER_SERVER, user=const.INF_VCENTER_USER,

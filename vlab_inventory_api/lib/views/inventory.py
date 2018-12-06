@@ -47,7 +47,8 @@ class InventoryView(TaskView):
         """Create a user's folder"""
         username = kwargs['token']['username']
         resp_data = {"user" : username}
-        task = current_app.celery_app.send_task('inventory.create', [username])
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
+        task = current_app.celery_app.send_task('inventory.create', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
