@@ -39,10 +39,11 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_inventory(self, fake_vCenter, fake_nuke_folder):
         """``delete_inventory`` returns None when everything works as expected"""
+        fake_logger = MagicMock()
         fake_folder = MagicMock()
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
 
-        result = vmware.delete_inventory(username='alice')
+        result = vmware.delete_inventory(username='alice', logger=fake_logger)
         expected = None
 
         self.assertEqual(result, expected)
@@ -51,11 +52,12 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_invalid_power_state(self, fake_vCenter, fake_nuke_folder):
         """``delete_inventory`` returns an error if a VM is not powered off"""
+        fake_logger = MagicMock()
         fake_nuke_folder.side_effect = [vmware.vim.fault.InvalidState(msg='testing')]
         fake_folder = MagicMock()
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
 
-        result = vmware.delete_inventory(username='alice')
+        result = vmware.delete_inventory(username='alice', logger=fake_logger)
         expected = 'testing'
 
         self.assertEqual(result, expected)
@@ -64,11 +66,12 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_already_gone(self, fake_vCenter, fake_nuke_folder):
         """``delete_inventory`` returns an error if the user has no inventory records"""
+        fake_logger = MagicMock()
         fake_nuke_folder.side_effect = [FileNotFoundError()]
         fake_folder = MagicMock()
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
 
-        result = vmware.delete_inventory(username='alice')
+        result = vmware.delete_inventory(username='alice', logger=fake_logger)
         expected = 'User alice has no folder'
 
         self.assertEqual(result, expected)
@@ -77,11 +80,12 @@ class TestVMware(unittest.TestCase):
     @patch.object(vmware, 'vCenter')
     def test_delete_failure(self, fake_vCenter, fake_nuke_folder):
         """``delete_inventory`` returns an error if there was a system failure"""
+        fake_logger = MagicMock()
         fake_nuke_folder.side_effect = [RuntimeError('testing')]
         fake_folder = MagicMock()
         fake_vCenter.return_value.__enter__.return_value.get_by_name.return_value = fake_folder
 
-        result = vmware.delete_inventory(username='alice')
+        result = vmware.delete_inventory(username='alice', logger=fake_logger)
         expected = 'testing'
 
         self.assertEqual(result, expected)

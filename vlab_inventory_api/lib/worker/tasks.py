@@ -26,26 +26,28 @@ Example:
 
 """
 from celery import Celery
-from celery.utils.log import get_task_logger
+from vlab_api_common import get_task_logger
 from vlab_inf_common.vmware import vCenter
 
 from vlab_inventory_api.lib import const
 from vlab_inventory_api.lib.worker import vmware
 
 app = Celery('inventory', backend='rpc://', broker=const.VLAB_MESSAGE_BROKER)
-logger = get_task_logger(__name__)
-logger.setLevel(const.VLAB_INVENTORY_LOG_LEVEL.upper())
 
 
-@app.task(name='inventory.show')
-def show(username):
+@app.task(name='inventory.show', bind=True)
+def show(self, username, txn_id):
     """Obtain information about all virtual machines a user owns
 
     :Returns: Dictionary
 
     :param username: The owner of the virtual machines
     :type username: String
+
+    :param txn_id: A unique string supplied by the client to track the call through logs
+    :type txn_id: String
     """
+    logger = get_task_logger(txn_id=txn_id, task_id=self.request.id, loglevel=const.VLAB_INVENTORY_LOG_LEVEL.upper())
     resp = {'content' : {}, 'error' : None, 'params' : {}}
     logger.info('Task Starting')
     try:
@@ -59,8 +61,8 @@ def show(username):
     return resp
 
 
-@app.task(name='inventory.delete')
-def delete(username):
+@app.task(name='inventory.delete', bind=True)
+def delete(self, username, txn_id):
     """Destroy a user's inventory
 
     :Returns: Dictionary
@@ -70,7 +72,11 @@ def delete(username):
 
     :param everything: Optionally destroy all the VMs associated with the user
     :type everything: Boolean
+
+    :param txn_id: A unique string supplied by the client to track the call through logs
+    :type txn_id: String
     """
+    logger = get_task_logger(txn_id=txn_id, task_id=self.request.id, loglevel=const.VLAB_INVENTORY_LOG_LEVEL.upper())
     resp = {'content' : {}, 'error' : None, 'params' : {}}
     logger.info('Task Starting')
     resp['error'] = vmware.delete_inventory(username)
@@ -78,17 +84,21 @@ def delete(username):
     return resp
 
 
-@app.task(name='inventory.create')
-def create(username):
+@app.task(name='inventory.create', bind=True)
+def create(self, username, txn_id):
     """Make a folder for tacking a user's VM inventory
 
     :Returns: Dictionary
 
     :param username: The name of the user to create a folder for
     :type username: String
+
+    :param txn_id: A unique string supplied by the client to track the call through logs
+    :type txn_id: String
     """
+    logger = get_task_logger(txn_id=txn_id, task_id=self.request.id, loglevel=const.VLAB_INVENTORY_LOG_LEVEL.upper())
     resp = {'content' : {}, 'error' : None, 'params' : {}}
     logger.info('Task Starting')
-    vmware.create_inventory(username)
+    vmware.create_inventory(username, logger)
     logger.info('Task Complete')
     return resp

@@ -30,7 +30,7 @@ class InventoryView(TaskView):
                   }
 
     @describe(get=GET_SCHEMA, delete=DELETE_SCHEMA, post=POST_SCHEMA)
-    @requires(verify=False, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     def get(self, *args, **kwargs):
         """Get all the virtual machines within a folder"""
         username = kwargs['token']['username']
@@ -42,19 +42,20 @@ class InventoryView(TaskView):
         resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
         return resp
 
-    @requires(verify=False, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     def post(self, *args, **kwargs):
         """Create a user's folder"""
         username = kwargs['token']['username']
         resp_data = {"user" : username}
-        task = current_app.celery_app.send_task('inventory.create', [username])
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
+        task = current_app.celery_app.send_task('inventory.create', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
         resp.headers.add('Link', '<{0}{1}/task/{2}>; rel=status'.format(const.VLAB_URL, self.route_base, task.id))
         return resp
 
-    @requires(verify=False, version=(1,2))
+    @requires(verify=const.VLAB_VERIFY_TOKEN, version=2)
     def delete(self, *args, **kwargs):
         """Delete a user's folder"""
         username = kwargs['token']['username']
