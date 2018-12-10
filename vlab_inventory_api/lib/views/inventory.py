@@ -34,8 +34,9 @@ class InventoryView(TaskView):
     def get(self, *args, **kwargs):
         """Get all the virtual machines within a folder"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('inventory.show', [username])
+        task = current_app.celery_app.send_task('inventory.show', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
@@ -46,8 +47,8 @@ class InventoryView(TaskView):
     def post(self, *args, **kwargs):
         """Create a user's folder"""
         username = kwargs['token']['username']
-        resp_data = {"user" : username}
         txn_id = request.headers.get('X-REQUEST-ID', 'noId')
+        resp_data = {"user" : username}
         task = current_app.celery_app.send_task('inventory.create', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
@@ -59,8 +60,9 @@ class InventoryView(TaskView):
     def delete(self, *args, **kwargs):
         """Delete a user's folder"""
         username = kwargs['token']['username']
+        txn_id = request.headers.get('X-REQUEST-ID', 'noId')
         resp_data = {'user' : username}
-        task = current_app.celery_app.send_task('inventory.delete', [username])
+        task = current_app.celery_app.send_task('inventory.delete', [username, txn_id])
         resp_data['content'] = {'task-id': task.id}
         resp = Response(ujson.dumps(resp_data))
         resp.status_code = 202
