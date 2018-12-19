@@ -99,6 +99,6 @@ def create(self, username, txn_id):
     logger = get_task_logger(txn_id=txn_id, task_id=self.request.id, loglevel=const.VLAB_INVENTORY_LOG_LEVEL.upper())
     resp = {'content' : {}, 'error' : None, 'params' : {}}
     logger.info('Task Starting')
-    vmware.create_inventory(username, logger)
+    vmware.create_inventory(username)
     logger.info('Task Complete')
     return resp
