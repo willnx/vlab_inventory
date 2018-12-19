@@ -79,7 +79,7 @@ def delete(self, username, txn_id):
     logger = get_task_logger(txn_id=txn_id, task_id=self.request.id, loglevel=const.VLAB_INVENTORY_LOG_LEVEL.upper())
     resp = {'content' : {}, 'error' : None, 'params' : {}}
     logger.info('Task Starting')
-    resp['error'] = vmware.delete_inventory(username)
+    resp['error'] = vmware.delete_inventory(username, logger)
     logger.info('Task Complete')
     return resp
 
