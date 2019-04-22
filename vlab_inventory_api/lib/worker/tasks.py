@@ -52,9 +52,9 @@ def show(self, username, txn_id):
     logger.info('Task Starting')
     try:
         info = vmware.show_inventory(username)
-    except FileNotFoundError:
+    except (FileNotFoundError, ValueError):
         status = 404
-        resp['error'] = 'User {} has no folder; try POSTing to create one.'.format(username)
+        resp['error'] = 'User {} has no inventory. HINT: Has the lab been initialized yet?'.format(username)
     else:
         resp['content'] = info
     logger.info('Task Complete')
