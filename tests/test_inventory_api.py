@@ -86,16 +86,6 @@ class TestInventoryView(unittest.TestCase):
 
         self.assertEqual(task_id, expected)
 
-    def test_network(self):
-        """GatewayView - PUT on /api/1/inf/inventory returns a 404"""
-        resp = self.app.put('/api/1/inf/inventory/network',
-                            headers={'X-Auth': self.token})
-
-        status = resp.status_code
-        expected = 404
-
-        self.assertEqual(status, expected)
-
 
 if __name__ == '__main__':
     unittest.main()
