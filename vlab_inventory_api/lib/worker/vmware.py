@@ -22,7 +22,7 @@ def show_inventory(username):
         folder = vcenter.get_by_name(name=username, vimtype=vim.Folder)
         vms = {}
         for entity in folder.childEntity:
-            info = virtual_machine.get_info(vcenter, entity)
+            info = virtual_machine.get_info(vcenter, entity, username)
             vms[entity.name] = info
     return vms
 
